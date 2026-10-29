@@ -628,6 +628,11 @@ export const en: Messages = {
 
   ui: {
     openSample: 'Open sample',
+    exportImage: 'Save as image',
+    copyImage: 'Copy image',
+    copied: 'Copied',
+    copyFailed: 'Could not copy',
+    exportFooter: (total, shown) => `WireSalmon · ${shown < total ? `first ${shown} of ` : ''}${total} packets`,
     samplePoint: 'What to look at',
     problems: (n) => `${n} with problems`,
     problemBad: 'Has a problem',

@@ -382,6 +382,29 @@ input[type='search'] {
   overflow-wrap: anywhere;
 }
 
+.flow-head-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.flow-head-top h2 {
+  flex: 1;
+  min-width: 0;
+}
+
+.flow-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.flow-actions .btn {
+  padding: 3px 10px;
+  font-size: 12.5px;
+}
+
 .status {
   padding: 1px 9px;
   border-radius: 999px;

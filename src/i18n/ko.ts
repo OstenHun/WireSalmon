@@ -630,6 +630,11 @@ export const ko = {
 
   ui: {
     openSample: '샘플 열기',
+    exportImage: '이미지로 저장',
+    copyImage: '이미지 복사',
+    copied: '복사했습니다',
+    copyFailed: '복사하지 못했습니다',
+    exportFooter: (total: number, shown: number) => `WireSalmon · 패킷 ${total}개${shown < total ? ` 중 처음 ${shown}개` : ''}`,
     samplePoint: '볼 것',
     problems: (n: number) => `문제 있는 대화 ${n}`,
     problemBad: '문제 있음',

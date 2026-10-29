@@ -2,6 +2,7 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 import { endpointAddr, endpointName, flowGuide, flowStatus, flowTitle } from '../core/describe.ts';
 import { findings, type Finding } from '../core/diagnose.ts';
 import { timing } from '../core/timing.ts';
+import { copyFlowImage, drawFlow, saveFlowImage } from './exportFlow.ts';
 import type { Flow, Packet } from '../core/types.ts';
 import type { Messages } from '../i18n/index.ts';
 import { useMessages } from './locale.ts';
@@ -63,9 +64,12 @@ export function FlowView(props: { flow: Flow; names: Map<string, string>; now: n
   return (
     <div className="flow-view">
       <div className="flow-head">
-        <h2>
-          <Badge app={flow.app} /> {flowTitle(flow, names, L)}
-        </h2>
+        <div className="flow-head-top">
+          <h2>
+            <Badge app={flow.app} /> {flowTitle(flow, names, L)}
+          </h2>
+          <ExportButtons flow={flow} shown={shown} names={names} />
+        </div>
         <p>{flowGuide(flow, L)}</p>
         <div className="chips">
           {flowStatus(flow, L).map((chip) => (
@@ -104,6 +108,33 @@ export function FlowView(props: { flow: Flow; names: Map<string, string>; now: n
         )}
       </div>
     </div>
+  );
+}
+
+/** 지금 보이는 대화 흐름을 이미지로 저장하거나 복사한다 */
+function ExportButtons({ flow, shown, names }: { flow: Flow; shown: Packet[]; names: Map<string, string> }) {
+  const L = useMessages();
+  const [copy, setCopy] = useState<'idle' | 'done' | 'failed'>('idle');
+  const draw = () => drawFlow(flow, shown, names, L);
+  const name = `wiresalmon-${flow.id}-${flow.app.toLowerCase()}.png`;
+  async function copyImage() {
+    try {
+      await copyFlowImage(draw());
+      setCopy('done');
+    } catch {
+      setCopy('failed');
+    }
+    setTimeout(() => setCopy('idle'), 2000);
+  }
+  return (
+    <span className="flow-actions">
+      <button className="btn" onClick={() => void saveFlowImage(draw(), name)}>
+        {L.ui.exportImage}
+      </button>
+      <button className="btn" onClick={() => void copyImage()}>
+        {copy === 'done' ? L.ui.copied : copy === 'failed' ? L.ui.copyFailed : L.ui.copyImage}
+      </button>
+    </span>
   );
 }
 
