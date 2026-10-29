@@ -11,7 +11,7 @@ Wireshark shows you one packet per line. A beginner wants to know *what just hap
 ## What it does
 
 - **Conversations, not packet lines** — packets are grouped into exchanges such as "name lookup: example.com" or "encrypted web traffic: example.com".
-- **Sequence diagram** — each conversation is drawn as arrows between the two sides. TCP is split into opening the connection, exchanging data and closing it.
+- **Sequence diagram** — each conversation is drawn as arrows between the two sides. TCP is split into opening the connection, exchanging data and closing it. The diagram can be saved as a PNG or copied to paste into notes.
 - **Plain-language explanations** — `[SYN, ACK] Seq=0 Ack=1` becomes *"② connection accepted — 'sure, I'm ready too'"*.
 - **Diagnosis** — each conversation says what went wrong and the usual causes: connection refused, no answer, an abrupt reset, resent data, a name that does not exist, a DNS server that stays silent, HTTP errors, unanswered pings. Conversations with problems are marked in the list and can be filtered.
 - **Where the time went** — a conversation is split into name lookup, connecting, encryption hello, waiting for the server and receiving the response, with the slow part pointed out.
