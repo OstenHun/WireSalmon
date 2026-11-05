@@ -36,6 +36,13 @@ function sourceText(source: Source, L: Messages): string {
   return source.kind === 'file' ? L.ui.sourceFile(source.name) : L.ui.sourceLive(source.name);
 }
 
+/** 주소에는 다시 만들 수 있는 샘플 ID만 남긴다. 파일과 실시간 캡처는 저장하지 않는다. */
+function setSampleLocation(id: string | null) {
+  const url = new URL(location.href);
+  url.hash = id ? new URLSearchParams({ sample: id }).toString() : '';
+  if (url.href !== location.href) history.pushState(null, '', url);
+}
+
 export function App() {
   const [locale, setLocale] = useState<Locale>(initialLocale);
   const L = LOCALES[locale];
@@ -91,7 +98,23 @@ export function App() {
     setVersion((v) => v + 1);
   }
 
-  function reset(session: Session, from: Source) {
+  // 처음 열 때와 브라우저 뒤로/앞으로 이동 때 주소의 샘플을 복원한다.
+  useEffect(() => {
+    restoreSample();
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('hashchange', restoreSample);
+    return () => window.removeEventListener('hashchange', restoreSample);
+  }, [L]);
+
+  function restoreSample() {
+    const id = new URLSearchParams(location.hash.slice(1)).get('sample');
+    if (id && SAMPLES.some((sample) => sample.id === id)) openSample(id, false);
+    else reset(null, null);
+  }
+
+  function reset(session: Session | null, from: Source | null) {
     socket.current?.close();
     sessionRef.current = session;
     setSource(from);
@@ -102,6 +125,8 @@ export function App() {
     setAppFilter(null);
     setProblemsOnly(false);
     setVersion((v) => v + 1);
+
+    if (from && from.kind !== 'sample') setSampleLocation(null);
   }
 
   function loadBytes(bytes: Uint8Array, from: Source) {
@@ -120,9 +145,12 @@ export function App() {
     setError(failure);
   }
 
-  function openSample(id: string) {
+  function openSample(id: string, navigate = true) {
     const sample = SAMPLES.find((s) => s.id === id);
-    if (sample) loadBytes(sample.build(L.sampleBodyLine), { kind: 'sample', id });
+    if (!sample) return;
+    loadBytes(sample.build(L.sampleBodyLine), { kind: 'sample', id });
+    // 주소에서 복원할 때는 이력을 추가하거나 앞으로 갈 기록을 지우지 않는다.
+    if (navigate) setSampleLocation(id);
   }
 
   async function openFile(file: File | undefined) {
