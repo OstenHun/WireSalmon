@@ -98,20 +98,43 @@ export function App() {
     setVersion((v) => v + 1);
   }
 
-  // 처음 열 때와 브라우저 뒤로/앞으로 이동 때 주소의 샘플을 복원한다.
+  // 처음 열 때는 URL에 적힌 샘플을 복원한다.
   useEffect(() => {
-    restoreSample();
+    restoreSampleFromUrl();
   }, []);
 
+  // 언어가 바뀐 뒤의 뒤로/앞으로 이동에도 새 언어로 샘플을 연다.
   useEffect(() => {
-    window.addEventListener('hashchange', restoreSample);
-    return () => window.removeEventListener('hashchange', restoreSample);
+    window.addEventListener('hashchange', restoreSampleFromUrl);
+    return () => window.removeEventListener('hashchange', restoreSampleFromUrl);
   }, [L]);
 
-  function restoreSample() {
-    const id = new URLSearchParams(location.hash.slice(1)).get('sample');
-    if (id && SAMPLES.some((sample) => sample.id === id)) openSample(id, false);
-    else reset(null, null);
+  function selectSample(sampleId: string) {
+    const sampleLoaded = loadSample(sampleId);
+    if (!sampleLoaded) return;
+    setSampleLocation(sampleId);
+  }
+
+  function restoreSampleFromUrl() {
+    const sampleId = new URLSearchParams(location.hash.slice(1)).get('sample');
+    if (!sampleId) {
+      showWelcome();
+      return;
+    }
+
+    const sampleLoaded = loadSample(sampleId);
+    if (!sampleLoaded) showWelcome();
+  }
+
+  function showWelcome() {
+    reset(null, null);
+  }
+
+  function loadSample(sampleId: string) {
+    const sample = SAMPLES.find((sample) => sample.id === sampleId);
+    if (!sample) return false;
+    loadBytes(sample.build(L.sampleBodyLine), { kind: 'sample', id: sampleId });
+    return true;
   }
 
   function reset(session: Session | null, from: Source | null) {
@@ -143,14 +166,6 @@ export function App() {
     }
     reset(session, from);
     setError(failure);
-  }
-
-  function openSample(id: string, navigate = true) {
-    const sample = SAMPLES.find((s) => s.id === id);
-    if (!sample) return;
-    loadBytes(sample.build(L.sampleBodyLine), { kind: 'sample', id });
-    // 주소에서 복원할 때는 이력을 추가하거나 앞으로 갈 기록을 지우지 않는다.
-    if (navigate) setSampleLocation(id);
   }
 
   async function openFile(file: File | undefined) {
@@ -257,7 +272,7 @@ export function App() {
             id="sample-menu"
             className="btn"
             value=""
-            onChange={(e) => openSample(e.target.value)}
+            onChange={(e) => selectSample(e.target.value)}
             aria-label={L.ui.openSample}
           >
             <option value="" disabled>
@@ -322,7 +337,7 @@ export function App() {
         )}
 
         {!session ? (
-          <Welcome onSample={openSample} liveAvailable={!!interfaces?.length} />
+          <Welcome onSample={selectSample} liveAvailable={!!interfaces?.length} />
         ) : (
           <main className="panes">
             <aside className="pane flows">
